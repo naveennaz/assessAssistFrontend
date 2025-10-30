@@ -89,10 +89,6 @@ function AppContent() {
               <span className="sidebar-icon">🔐</span>
               <span className="sidebar-text">Roles</span>
             </Link>
-            <Link to="/permissions" className="sidebar-link">
-              <span className="sidebar-icon">🔑</span>
-              <span className="sidebar-text">Permissions</span>
-            </Link>
             <Link to="/assessments" className="sidebar-link">
               <span className="sidebar-icon">📋</span>
               <span className="sidebar-text">Assessments</span>
@@ -113,11 +109,6 @@ function AppContent() {
             <Route path="/roles" element={<RoleList />} />
             <Route path="/roles/new" element={<RoleForm />} />
             <Route path="/roles/edit/:id" element={<RoleForm />} />
-            
-            {/* Permission Routes */}
-            <Route path="/permissions" element={<PermissionList />} />
-            <Route path="/permissions/new" element={<PermissionForm />} />
-            <Route path="/permissions/edit/:id" element={<PermissionForm />} />
             
             {/* Psychologist Routes (Legacy) */}
             <Route path="/psychologists" element={<PsychologistList />} />

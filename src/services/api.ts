@@ -38,6 +38,16 @@ export const permissionAPI = {
   delete: (id: number) => api.delete(`/permissions/${id}`),
 };
 
+// Role Permission APIs
+export const rolePermissionAPI = {
+  getByRole: (roleId: number) => 
+    api.get(`/role-permissions?filter=${JSON.stringify({ where: { roleId } })}`),
+  assignPermissions: (roleId: number, permissionIds: number[]) => 
+    api.post(`/role-permissions/assign`, { roleId, permissionIds }),
+  removePermission: (roleId: number, permissionId: number) => 
+    api.delete(`/role-permissions?filter=${JSON.stringify({ where: { roleId, permissionId } })}`),
+};
+
 // Psychologist APIs
 export const psychologistAPI = {
   getAll: () => api.get('/psychologists'),

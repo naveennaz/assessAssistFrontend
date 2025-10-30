@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { roleAPI } from '../../services/api';
-import { Role } from '../../types';
+import { roleAPI, permissionAPI, rolePermissionAPI } from '../../services/api';
+import { Role, Permission } from '../../types';
 
 const RoleForm: React.FC = () => {
   const navigate = useNavigate();
@@ -13,14 +13,27 @@ const RoleForm: React.FC = () => {
     description: '',
   });
 
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    loadPermissions();
     if (isEdit && id) {
       loadRole(parseInt(id));
+      loadRolePermissions(parseInt(id));
     }
   }, [id, isEdit]);
+
+  const loadPermissions = async () => {
+    try {
+      const response = await permissionAPI.getAll();
+      setPermissions(response.data);
+    } catch (err) {
+      console.error('Failed to load permissions:', err);
+    }
+  };
 
   const loadRole = async (roleId: number) => {
     try {
@@ -29,6 +42,16 @@ const RoleForm: React.FC = () => {
     } catch (err) {
       setError('Failed to load role');
       console.error(err);
+    }
+  };
+
+  const loadRolePermissions = async (roleId: number) => {
+    try {
+      const response = await rolePermissionAPI.getByRole(roleId);
+      const permissionIds = response.data.map((rp: any) => rp.permissionId);
+      setSelectedPermissions(permissionIds);
+    } catch (err) {
+      console.error('Failed to load role permissions:', err);
     }
   };
 
@@ -41,17 +64,37 @@ const RoleForm: React.FC = () => {
     });
   };
 
+  const handlePermissionToggle = (permissionId: number) => {
+    setSelectedPermissions(prev => {
+      if (prev.includes(permissionId)) {
+        return prev.filter(id => id !== permissionId);
+      } else {
+        return [...prev, permissionId];
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
+      let roleId: number;
+      
       if (isEdit && id) {
         await roleAPI.update(parseInt(id), formData);
+        roleId = parseInt(id);
       } else {
-        await roleAPI.create(formData);
+        const response = await roleAPI.create(formData);
+        roleId = response.data.id;
       }
+
+      // Update permissions
+      if (selectedPermissions.length > 0) {
+        await rolePermissionAPI.assignPermissions(roleId, selectedPermissions);
+      }
+
       navigate('/roles');
     } catch (err) {
       setError(`Failed to ${isEdit ? 'update' : 'create'} role`);
@@ -60,6 +103,15 @@ const RoleForm: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Group permissions by resource
+  const groupedPermissions = permissions.reduce((acc, permission) => {
+    if (!acc[permission.resource]) {
+      acc[permission.resource] = [];
+    }
+    acc[permission.resource].push(permission);
+    return acc;
+  }, {} as Record<string, Permission[]>);
 
   return (
     <div>
@@ -93,6 +145,39 @@ const RoleForm: React.FC = () => {
             placeholder="Brief description of this role"
             rows={4}
           />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Permissions</label>
+          <div className="permissions-container">
+            {Object.keys(groupedPermissions).map((resource) => (
+              <div key={resource} className="permission-group">
+                <h4 className="permission-group-title">
+                  {resource.charAt(0).toUpperCase() + resource.slice(1)}
+                </h4>
+                <div className="permission-checkboxes">
+                  {groupedPermissions[resource].map((permission) => (
+                    <label key={permission.id} className="permission-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={selectedPermissions.includes(permission.id!)}
+                        onChange={() => handlePermissionToggle(permission.id!)}
+                        className="permission-checkbox"
+                      />
+                      <span className="permission-name">
+                        {permission.name}
+                        {permission.description && (
+                          <span className="permission-description">
+                            {' - ' + permission.description}
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="form-actions">
