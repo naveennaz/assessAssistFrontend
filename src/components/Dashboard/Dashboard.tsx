@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { psychologistAPI, patientAPI, assessmentAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     psychologists: 0,
     patients: 0,
@@ -47,6 +49,33 @@ const Dashboard: React.FC = () => {
     <div>
       <div className="page-header">
         <h1 className="page-title">Dashboard</h1>
+      </div>
+
+      {/* User Info Card */}
+      <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+        <h2 style={{ marginBottom: '1rem', color: 'white' }}>
+          Welcome, {user?.firstName} {user?.lastName}! 👋
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div>
+            <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Role</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '0.25rem' }}>
+              {user?.role?.name || 'N/A'}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Email</div>
+            <div style={{ fontSize: '1rem', fontWeight: 500, marginTop: '0.25rem' }}>
+              {user?.email}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Permissions</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '0.25rem' }}>
+              {user?.permissions?.length || 0} assigned
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-2">

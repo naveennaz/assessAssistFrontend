@@ -1,6 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+interface Permission {
+  id: number;
+  name: string;
+  resource: string;
+  action: string;
+  description?: string;
+}
+
+interface Role {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 interface User {
   id: number;
   email: string;
@@ -8,6 +22,8 @@ interface User {
   lastName: string;
   roleId: number;
   isActive: boolean;
+  role: Role;
+  permissions: Permission[];
 }
 
 interface AuthContextType {
@@ -17,6 +33,8 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
+  hasPermission: (permissionName: string) => boolean;
+  hasAnyPermission: (permissionNames: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,6 +94,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  const hasPermission = (permissionName: string): boolean => {
+    if (!user || !user.permissions) return false;
+
+    // Check if user has the specific permission by name
+    return user.permissions.some((p) => p.name === permissionName);
+  };
+
+  const hasAnyPermission = (permissionNames: string[]): boolean => {
+    if (!user || !user.permissions) return false;
+
+    return permissionNames.some((name) => hasPermission(name));
+  };
+
   const value = {
     user,
     token,
@@ -83,6 +114,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     isAuthenticated: !!token && !!user,
     loading,
+    hasPermission,
+    hasAnyPermission,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

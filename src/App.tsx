@@ -20,11 +20,13 @@ import PermissionList from './components/Permissions/PermissionList';
 import PermissionForm from './components/Permissions/PermissionForm';
 import Login from './components/Auth/Login';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import PermissionGuard from './components/Auth/PermissionGuard';
+import PermissionRoute from './components/Auth/PermissionRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { user, logout, isAuthenticated, loading } = useAuth();
+  const { user, logout, isAuthenticated, loading, hasPermission, hasAnyPermission } = useAuth();
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -81,18 +83,38 @@ function AppContent() {
               <span className="sidebar-icon">📊</span>
               <span className="sidebar-text">Dashboard</span>
             </Link>
-            <Link to="/users" className="sidebar-link">
-              <span className="sidebar-icon">👥</span>
-              <span className="sidebar-text">Users</span>
-            </Link>
-            <Link to="/roles" className="sidebar-link">
-              <span className="sidebar-icon">🔐</span>
-              <span className="sidebar-text">Roles</span>
-            </Link>
-            <Link to="/assessments" className="sidebar-link">
-              <span className="sidebar-icon">📋</span>
-              <span className="sidebar-text">Assessments</span>
-            </Link>
+            
+            {/* Users - Show if user has read permission */}
+            {hasAnyPermission(['READ_USERS', 'ALL_USERS']) && (
+              <Link to="/users" className="sidebar-link">
+                <span className="sidebar-icon">👥</span>
+                <span className="sidebar-text">Users</span>
+              </Link>
+            )}
+            
+            {/* Roles - Show if user has read permission */}
+            {hasAnyPermission(['READ_ROLES', 'ALL_ROLES']) && (
+              <Link to="/roles" className="sidebar-link">
+                <span className="sidebar-icon">🔐</span>
+                <span className="sidebar-text">Roles</span>
+              </Link>
+            )}
+            
+            {/* Patients - Show if user has read permission */}
+            {hasAnyPermission(['READ_PATIENTS', 'ALL_PATIENTS']) && (
+              <Link to="/patients" className="sidebar-link">
+                <span className="sidebar-icon">🏥</span>
+                <span className="sidebar-text">Patients</span>
+              </Link>
+            )}
+            
+            {/* Assessments - Show if user has read permission */}
+            {hasAnyPermission(['READ_ASSESSMENTS', 'ALL_ASSESSMENTS']) && (
+              <Link to="/assessments" className="sidebar-link">
+                <span className="sidebar-icon">📋</span>
+                <span className="sidebar-text">Assessments</span>
+              </Link>
+            )}
           </nav>
         </aside>
 
@@ -100,32 +122,130 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             
-            {/* User Routes */}
-            <Route path="/users" element={<UserList />} />
-            <Route path="/users/new" element={<UserForm />} />
-            <Route path="/users/edit/:id" element={<UserForm />} />
+            {/* User Routes - Require permissions */}
+            <Route 
+              path="/users" 
+              element={
+                <PermissionRoute permission="READ_USERS">
+                  <UserList />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/users/new" 
+              element={
+                <PermissionRoute permission="CREATE_USERS">
+                  <UserForm />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/users/edit/:id" 
+              element={
+                <PermissionRoute permission="UPDATE_USERS">
+                  <UserForm />
+                </PermissionRoute>
+              } 
+            />
             
-            {/* Role Routes */}
-            <Route path="/roles" element={<RoleList />} />
-            <Route path="/roles/new" element={<RoleForm />} />
-            <Route path="/roles/edit/:id" element={<RoleForm />} />
+            {/* Role Routes - Require permissions */}
+            <Route 
+              path="/roles" 
+              element={
+                <PermissionRoute permission="READ_ROLES">
+                  <RoleList />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/roles/new" 
+              element={
+                <PermissionRoute permission="CREATE_ROLES">
+                  <RoleForm />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/roles/edit/:id" 
+              element={
+                <PermissionRoute permission="UPDATE_ROLES">
+                  <RoleForm />
+                </PermissionRoute>
+              } 
+            />
             
-            {/* Psychologist Routes (Legacy) */}
+            {/* Patient Routes - Require permissions */}
+            <Route 
+              path="/patients" 
+              element={
+                <PermissionRoute permission="READ_PATIENTS">
+                  <PatientList />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/patients/new" 
+              element={
+                <PermissionRoute permission="CREATE_PATIENTS">
+                  <PatientForm />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/patients/edit/:id" 
+              element={
+                <PermissionRoute permission="UPDATE_PATIENTS">
+                  <PatientForm />
+                </PermissionRoute>
+              } 
+            />
+            
+            {/* Assessment Routes - Require permissions */}
+            <Route 
+              path="/assessments" 
+              element={
+                <PermissionRoute permission="READ_ASSESSMENTS">
+                  <AssessmentList />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/new" 
+              element={
+                <PermissionRoute permission="CREATE_ASSESSMENTS">
+                  <AssessmentForm />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/edit/:id" 
+              element={
+                <PermissionRoute permission="UPDATE_ASSESSMENTS">
+                  <AssessmentForm />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/:id" 
+              element={
+                <PermissionRoute permission="READ_ASSESSMENTS">
+                  <AssessmentDetail />
+                </PermissionRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/:id/take" 
+              element={
+                <PermissionRoute permission="CREATE_RESPONSES">
+                  <AssessmentTake />
+                </PermissionRoute>
+              } 
+            />
+            
+            {/* Legacy Psychologist Routes */}
             <Route path="/psychologists" element={<PsychologistList />} />
             <Route path="/psychologists/new" element={<PsychologistForm />} />
             <Route path="/psychologists/edit/:id" element={<PsychologistForm />} />
-            
-            {/* Patient Routes (Legacy) */}
-            <Route path="/patients" element={<PatientList />} />
-            <Route path="/patients/new" element={<PatientForm />} />
-            <Route path="/patients/edit/:id" element={<PatientForm />} />
-            
-            {/* Assessment Routes */}
-            <Route path="/assessments" element={<AssessmentList />} />
-            <Route path="/assessments/new" element={<AssessmentForm />} />
-            <Route path="/assessments/edit/:id" element={<AssessmentForm />} />
-            <Route path="/assessments/:id" element={<AssessmentDetail />} />
-            <Route path="/assessments/:id/take" element={<AssessmentTake />} />
           </Routes>
         </main>
       </div>

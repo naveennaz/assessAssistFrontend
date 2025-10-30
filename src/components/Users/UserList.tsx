@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { userAPI, roleAPI } from '../../services/api';
 import { User, Role } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
+import PermissionGuard from '../Auth/PermissionGuard';
 
 const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -9,6 +11,7 @@ const UserList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterRole, setFilterRole] = useState<number | null>(null);
+  const { hasPermission } = useAuth();
 
   useEffect(() => {
     loadData();
@@ -61,9 +64,11 @@ const UserList: React.FC = () => {
     <div>
       <div className="page-header">
         <h1 className="page-title">Users</h1>
-        <Link to="/users/new" className="btn btn-primary">
-          + Add User
-        </Link>
+        <PermissionGuard permission="CREATE_USERS">
+          <Link to="/users/new" className="btn btn-primary">
+            + Add User
+          </Link>
+        </PermissionGuard>
       </div>
 
       {error && <div className="error">{error}</div>}
@@ -123,20 +128,24 @@ const UserList: React.FC = () => {
                   </td>
                   <td>
                     <div className="table-actions">
-                      <Link
-                        to={`/users/edit/${user.id}`}
-                        className="btn btn-secondary"
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(user.id!)}
-                        className="btn btn-danger"
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                      >
-                        Delete
-                      </button>
+                      <PermissionGuard permission="UPDATE_USERS">
+                        <Link
+                          to={`/users/edit/${user.id}`}
+                          className="btn btn-secondary"
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                        >
+                          Edit
+                        </Link>
+                      </PermissionGuard>
+                      <PermissionGuard permission="DELETE_USERS">
+                        <button
+                          onClick={() => handleDelete(user.id!)}
+                          className="btn btn-danger"
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                        >
+                          Delete
+                        </button>
+                      </PermissionGuard>
                     </div>
                   </td>
                 </tr>
